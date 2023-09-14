@@ -1,0 +1,6 @@
+.terraform/
+terraform/tmp/
+.DS_Store
+terraform/terraform.tfstate
+.gitignore
+terraform/terraform.tfstate.backup
