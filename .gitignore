@@ -1,0 +1,3 @@
+.terraform/
+terraform/tmp/
+.DS_Store
