@@ -12,6 +12,7 @@ import functions_framework
 
 @functions_framework.http
 def handle(request):
+    """handle a request to the function"""
 
     url = request.get_json().get('video_url', None)
     if url is None:
@@ -41,6 +42,8 @@ def handle(request):
 
 
 def get_frame(url):
+    """get the latest frame from the yt video"""
+
     ydl_opts = {
          'nocheckcertificate': True
     }
@@ -80,7 +83,9 @@ def get_frame(url):
     cv2.destroyAllWindows()
 
 
-def download_blob(bucket_name, source_blob_name):    
+def download_blob(bucket_name, source_blob_name):
+    """Downloads a blob from the bucket."""
+
     # Initialize the client
     storage_client = storage.Client()
 
@@ -95,6 +100,8 @@ def download_blob(bucket_name, source_blob_name):
     # Download the blob
     blob_path = "/tmp/" + source_blob_name
     blob.download_to_filename(blob_path)
+
+    print("Blob {} downloaded to {}.".format(source_blob_name, blob_path))
 
     return blob_path
 
@@ -112,14 +119,17 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
     # Upload the local file to GCS
     blob.upload_from_filename(source_file_name)
+    print("File uploaded to {}.".format(destination_blob_name))
 
 
 def compare(image_a, image_b):
+    """compare two images and return the percentage of difference"""
+
     image_a_data = cv2.imread(image_a, 0)
     image_b_data = cv2.imread(image_b, 0)
 
     diff = cv2.absdiff(image_a_data, image_b_data)
     diff_int = diff.astype(np.uint8)
     percentage = (np.count_nonzero(diff_int) * 100) / diff_int.size
-
+    print("percentage difference: " + str(percentage))
     return percentage
