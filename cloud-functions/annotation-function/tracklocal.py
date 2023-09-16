@@ -2,7 +2,7 @@
 from google.cloud import videointelligence
 import io
 
-path = "video/example/sample-landing.mov"
+path = "../../assets/video/sample-landing.mov"
 
 video_client = videointelligence.VideoIntelligenceServiceClient()
 features = [videointelligence.Feature.OBJECT_TRACKING]
