@@ -56,14 +56,29 @@ resource "google_cloudfunctions_function" "comparer_function" {
   region                = "us-central1"
   description           = "comparer function"
   trigger_http          = true
-  available_memory_mb   = 128
+  available_memory_mb   = 1024
   source_archive_bucket = google_storage_bucket.function_bucket.name
   source_archive_object = google_storage_bucket_object.comparer_object.name
   entry_point           = "handle"
-  depends_on            = [module.project-services]
+
+  environment_variables = {
+    BUCKET_NAME = google_storage_bucket.comparer_bucket.name
+    BYPASS      = false
+  }
+
+  depends_on = [module.project-services]
 }
 
-resource "google_cloud_scheduler_job" "trigger_annotation_function" {
+resource "google_cloudfunctions_function_iam_member" "comparer_invoker" {
+  project        = google_cloudfunctions_function.comparer_function.project
+  region         = google_cloudfunctions_function.comparer_function.region
+  cloud_function = google_cloudfunctions_function.comparer_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+resource "google_cloud_scheduler_job" "trigger_comparer_function" {
   name             = "trigger-main-function"
   project          = var.project_id
   description      = "triggers the main function to run"
@@ -77,8 +92,9 @@ resource "google_cloud_scheduler_job" "trigger_annotation_function" {
   }
 
   http_target {
-    http_method = "GET"
-    uri         = google_cloudfunctions_function.annotation_function.https_trigger_url
+    http_method = "POST"
+    uri         = google_cloudfunctions_function.comparer_function.https_trigger_url
+    body        = base64encode(format("{\"video_url\":\"%s\"}", var.video_url))
   }
 
   depends_on = [module.project-services]
@@ -123,6 +139,15 @@ resource "google_cloudfunctions_function" "annotation_function" {
   source_archive_object = google_storage_bucket_object.annotation_object.name
   entry_point           = "handle"
   depends_on            = [module.project-services]
+}
+
+resource "google_cloudfunctions_function_iam_member" "annotation_invoker" {
+  project        = google_cloudfunctions_function.annotation_function.project
+  region         = google_cloudfunctions_function.annotation_function.region
+  cloud_function = google_cloudfunctions_function.annotation_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
 }
 
 resource "google_storage_bucket" "annotation_bucket" {
@@ -211,6 +236,15 @@ resource "google_cloudfunctions_function" "analyser_function" {
   source_archive_object = google_storage_bucket_object.analyser_object.name
   entry_point           = "handle"
   depends_on            = [module.project-services]
+}
+
+resource "google_cloudfunctions_function_iam_member" "analyser_invoker" {
+  project        = google_cloudfunctions_function.analyser_function.project
+  region         = google_cloudfunctions_function.analyser_function.region
+  cloud_function = google_cloudfunctions_function.analyser_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
 }
 
 // -- END: Analyser Function
