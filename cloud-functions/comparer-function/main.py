@@ -7,6 +7,8 @@ import os
 
 import youtube_dl
 from google.cloud import storage
+from google.cloud import pubsub_v1
+
 
 import functions_framework
 
@@ -29,16 +31,20 @@ def handle(request):
 
     previous_frame_path = download_blob(bucket_name, 'previous_frame.jpg')
     if previous_frame_path is not None:
+
         percentage = compare(latest_frame_path, previous_frame_path)
-        if percentage > 5:
-            print("calling annotation function")
+        if percentage > float(os.environ.get('PERCENTAGE_DIFF', 10)):
+            project_id=os.getenv('GCP_PROJECT')
+            topic=os.getenv('ANNOTATION_TOPIC')
+            publish_message(project_id, topic, 'ok')
+
         else:
             print("no annotation needed")
 
     print("uploading latest frame")
     upload_blob(bucket_name, latest_frame_path, 'previous_frame.jpg')
 
-    return 'OK', 200
+    return "ok", 200
 
 
 def get_frame(url):
@@ -120,6 +126,16 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     # Upload the local file to GCS
     blob.upload_from_filename(source_file_name)
     print("File uploaded to {}.".format(destination_blob_name))
+
+
+def publish_message(project_id, topic_name, message):
+    publisher = pubsub_v1.PublisherClient()
+    topic_name = 'projects/{project_id}/topics/{topic}'.format(
+        project_id=project_id,
+        topic=topic_name,
+    )
+    future = publisher.publish(topic_name, b'hello from compare func')
+    future.result()
 
 
 def compare(image_a, image_b):
