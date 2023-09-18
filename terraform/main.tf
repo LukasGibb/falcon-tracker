@@ -79,9 +79,9 @@ resource "google_cloudfunctions_function_iam_member" "comparer_invoker" {
 }
 
 resource "google_cloud_scheduler_job" "trigger_comparer_function" {
-  name             = "trigger-main-function"
+  name             = "trigger-comparer-function"
   project          = var.project_id
-  description      = "triggers the main function to run"
+  description      = "triggers the comparer function to run"
   schedule         = "*/10 * * * *"
   time_zone        = "Australia/Melbourne"
   attempt_deadline = "320s"
@@ -94,8 +94,12 @@ resource "google_cloud_scheduler_job" "trigger_comparer_function" {
   http_target {
     http_method = "POST"
     uri         = google_cloudfunctions_function.comparer_function.https_trigger_url
-    body        = base64encode(format("{\"video_url\":\"%s\"}", var.video_url))
+    headers = {
+      "Content-Type" = "application/json"
+    }
+    body = base64encode(format("{\"video_url\":\"%s\"}", var.video_url))
   }
+
 
   depends_on = [module.project-services]
 }
