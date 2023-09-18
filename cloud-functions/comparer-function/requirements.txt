@@ -3,3 +3,4 @@ opencv-python==4.8.0.76
 youtube_dl==2021.12.17
 numpy==1.24.4
 google-cloud-storage==2.10.0
+youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git@master
