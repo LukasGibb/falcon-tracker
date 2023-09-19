@@ -1,6 +1,9 @@
 // -- START: Services
 
-data "google_app_engine_default_service_account" "this" {}
+resource "google_service_account" "service_account" {
+  account_id   = "subscription-service-account"
+  display_name = "Subscription Service Account"
+}
 
 module "project-services" {
   source     = "terraform-google-modules/project-factory/google//modules/project_services"
@@ -143,7 +146,7 @@ resource "google_pubsub_subscription" "annotation_event_subscription" {
 resource "google_pubsub_topic_iam_binding" "annotate" {
   topic   = google_pubsub_topic.annotation_event_topic.id
   role    = "roles/pubsub.publisher"
-  members = ["serviceAccount:${data.google_app_engine_default_service_account.this.email}"]
+  members = ["serviceAccount:${google_service_account.service_account.email}"]
 }
 
 // -- END: Annotation Event
@@ -228,7 +231,7 @@ resource "google_pubsub_subscription" "notify_event_subscription" {
 resource "google_pubsub_topic_iam_binding" "notify" {
   topic   = google_pubsub_topic.notify_event_topic.id
   role    = "roles/pubsub.publisher"
-  members = ["serviceAccount:${data.google_app_engine_default_service_account.this.email}"]
+  members = ["serviceAccount:${google_service_account.service_account.email}"]
 }
 
 // -- END: Notify Event
