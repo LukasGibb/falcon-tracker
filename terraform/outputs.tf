@@ -1,3 +1,6 @@
+output "comparer_environment_variables" {
+  value = google_cloudfunctions_function.comparer_function.environment_variables
+}
 output "comparer_bucket_name" {
   value = google_storage_bucket.comparer_bucket.name
 }
