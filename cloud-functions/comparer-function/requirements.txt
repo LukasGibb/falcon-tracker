@@ -5,3 +5,4 @@ numpy==1.24.4
 google-cloud-storage==2.10.0
 google-cloud-pubsub==2.18.4
 youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git@master
+python-dotenv

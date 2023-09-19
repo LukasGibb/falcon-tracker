@@ -41,3 +41,4 @@ terraform/tmp/
 .gitignore
 .idea
 __pycache__
+.env
