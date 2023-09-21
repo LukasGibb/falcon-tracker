@@ -24,7 +24,34 @@ This project uses the Google Video Intelligence API to monitor a video stream an
 
 ## Local Testing
 
-### Comparer Function
+### Running the tracklocal script
+
+This script will use the Google Video Intelligence API to return object tracking annotations for a local video. 
+
+- `pip3 install -r requirements.txt`
+- `gcloud init` to set up a config for your project
+- `gcloud auth application-default login` to authenticate with GCP
+- `python3 tracklocal.py`
+
+### Running the trackstream script
+
+This script will:
+- record and save a clip the stream to `/tmp/latest_clip.mp4`
+- optionally use the Google Video Intelligence API to return object tracking annotations for the recorded clip 
+- show a live view of the stream for a defined time
+- apply local (openCV) object tracking within a defined region of interest
+- optionally draw contours and bounding boxes around the detected objects
+- display the static background mask that is being used to reduce noise
+- display the region of interest to help understand which area is being observed
+
+
+- `pip3 install -r requirements.txt`
+- `gcloud init` to set up a config for your project
+- `gcloud auth application-default login` to authenticate with GCP
+- `python3 trackstream.py`
+- To stop the video capture, press the ESC on the keyboard.
+
+### Comparer CloudFunction
 
 This Cloud Function takes the latest frame of the video stream and compares it with the frame that was captured on the last run (stored in the Cloud Bucket).
 
@@ -47,19 +74,20 @@ Use PostMan to send requests to http://localhost:8080
 }
 ```
 
-### Running the tracklocal script
+### Annotation CloudFunction
 
-This script will use the Google Video Intelligence API to return object tracking annotations for a local video. 
-
-- `pip3 install -r requirements.txt`
-- `gcloud init` to set up a config for your project
-- `gcloud auth application-default login` to authenticate with GCP
-- `python3 tracklocal.py`
-
-### Annotation Function
+This Cloud Function will:
+- capture a clip of the video stream
+- send the clip to the video intelligence API for annotation
+TODO:
+- store the annotation in a bucket for future comparison
+- compare the annotation with the one captured on the last run
+- sends a message to pub/sub (to trigger the notify-function) if there is something worth hearing about
 
 - `cd cloud-functions\annotate-function\`
 - `pip3 install -r requirements.txt`
+- Copy `.env.example` to `.env` if it doesn't already exist
+- Set the environment variables (copy the values from the terraform output)
 - Run `functions-framework --target handle --debug` in terminal to run the function
 OR
 - Open `main.py` and then press `F5` to use the Run and Debug function in VS Code
