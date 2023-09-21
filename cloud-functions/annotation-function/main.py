@@ -33,8 +33,9 @@ def handle(request):
     print("Annotation function called...")
     
     # Get latest clip
+    capture_time=os.getenv('CAPTURE_TIME')
     print("calling get_clip function")
-    latest_clip_path = get_clip(url, 300)
+    latest_clip_path = get_clip(url, capture_time)
     if latest_clip_path is None:
         return 'No clip retrieved', 400
     
@@ -65,7 +66,7 @@ def publish_message(project_id, topic_name):
     future = publisher.publish(topic_name, b'hello from annotation func')
     future.result()
 
-def get_clip(url,frames):
+def get_clip(url,time):
     """get the latest clip from the yt video"""
 
     ydl_opts = {
@@ -100,6 +101,7 @@ def get_clip(url,frames):
     
     file = cv2.VideoWriter(filename,fourcc,fps,(width, height))
     framecount = 0
+    frames = float(time) * fps
 
     while True:
         while framecount < frames:

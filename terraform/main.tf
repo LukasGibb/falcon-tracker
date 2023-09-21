@@ -178,11 +178,13 @@ resource "google_cloudfunctions_function" "annotation_function" {
   source_archive_bucket = google_storage_bucket.function_bucket.name
   source_archive_object = google_storage_bucket_object.annotation_object.name
   entry_point           = "handle"
+  timeout               = 60 + var.capture_time + var.capture_time
 
   environment_variables = {
     GCP_PROJECT  = var.project_id
     BUCKET_NAME  = google_storage_bucket.annotation_bucket.name
     NOTIFY_TOPIC = google_pubsub_topic.notify_event_topic.name
+    CAPTURE_TIME = var.capture_time
   }
 
   depends_on = [module.project-services]
