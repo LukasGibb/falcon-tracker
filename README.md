@@ -55,3 +55,22 @@ This script will use the Google Video Intelligence API to return object tracking
 - `gcloud init` to set up a config for your project
 - `gcloud auth application-default login` to authenticate with GCP
 - `python3 tracklocal.py`
+
+### Annotation Function
+
+- `cd cloud-functions\annotate-function\`
+- `pip3 install -r requirements.txt`
+- Run `functions-framework --target handle --debug` in terminal to run the function
+OR
+- Open `main.py` and then press `F5` to use the Run and Debug function in VS Code
+
+Use PostMan to send requests to http://localhost:8080
+- Set the `Content-Type` header to `application\json`
+- Set the `Body` to `raw` and select `JSON`
+- Add the following (updating the URL to your chosen live stream)
+
+```
+{
+    "video_url": "https://www.youtube.com/watch?v=y3b2rKUPMsA"
+}
+```

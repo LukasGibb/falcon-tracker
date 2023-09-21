@@ -1,7 +1,4 @@
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-import math
 import cv2
-import sys
 import numpy as np
 import os
 
@@ -36,7 +33,7 @@ def handle(request):
         if percentage > float(os.environ.get('PERCENTAGE_DIFF', 10)):
             project_id=os.getenv('GCP_PROJECT')
             topic=os.getenv('ANNOTATION_TOPIC')
-            publish_message(project_id, topic, 'ok')
+            publish_message(project_id, topic, url)
 
         else:
             print("no annotation needed")
@@ -58,36 +55,44 @@ def get_frame(url):
     info_dict = ydl.extract_info(url, download=False)
     formats = info_dict.get('formats', None)
 
+    # Find specific URL for 1920x1080 if available to keep things consistent
+    media_url = ''
     for f in formats:
         if '1920x1080' in f.get('format', None):
+            media_url = f.get('url', None)
+    
+    if media_url == '':
+        print('video format not supported')
+        return None
+    
+    if media_url is None:
+        print('Media URL not found')
+        return None
+    
+    cap = cv2.VideoCapture(media_url)
 
-            url = f.get('url', None)
+    if not cap.isOpened():
+        print('video not opened')
+        return None
 
-            cap = cv2.VideoCapture(url)
+    while True:
+        # read frame
+        ret, latest_frame = cap.read()
 
-            if not cap.isOpened():
-                print('video not opened')
-                return None
+        # check if frame is empty
+        if not ret:
+            return None
 
-            while True:
-                # read frame
-                ret, latest_frame = cap.read()
+        # save frame as image
+        cv2.imwrite('/tmp/latest_frame.jpg', latest_frame)
 
-                # check if frame is empty
-                if not ret:
-                    return None
+        # break to only capture 1 frame, else keep looping
+        break
 
-                # save frame as image
-                cv2.imwrite('/tmp/latest_frame.jpg', latest_frame)
-
-                # break to only capture 1 frame, else keep looping
-                return '/tmp/latest_frame.jpg'
-
-            # release VideoCapture
-            cap.release()
-
+    # release VideoCapture
+    cap.release()
     cv2.destroyAllWindows()
-
+    return '/tmp/latest_frame.jpg'
 
 def download_blob(bucket_name, source_blob_name):
     """Downloads a blob from the bucket."""
@@ -134,7 +139,7 @@ def publish_message(project_id, topic_name, message):
         project_id=project_id,
         topic=topic_name,
     )
-    future = publisher.publish(topic_name, b'hello from compare func')
+    future = publisher.publish(topic_name, message.encode("utf-8"))
     future.result()
 
 

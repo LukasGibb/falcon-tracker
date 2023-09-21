@@ -5,7 +5,11 @@ output "comparer_bucket_name" {
   value = google_storage_bucket.comparer_bucket.name
 }
 
-output "annotation_bucket" {
+output "annotation_environment_variables" {
+  value = google_cloudfunctions_function.annotation_function.environment_variables
+}
+
+output "annotation_bucket_name" {
   value = google_storage_bucket.annotation_bucket.name
 }
 
