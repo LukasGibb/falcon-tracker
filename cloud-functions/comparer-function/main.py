@@ -32,7 +32,9 @@ def handle(request):
     previous_frame_path = download_blob(bucket_name, 'previous_frame.jpg')
     if previous_frame_path is not None:
 
-        percentage = compare(latest_frame_path, previous_frame_path)
+        image_mask = os.environ.get('IMAGE_MASK',None)
+
+        percentage = compare(latest_frame_path, previous_frame_path, image_mask)
         if percentage > float(os.environ.get('PERCENTAGE_DIFF', 10)):
             project_id=os.getenv('GCP_PROJECT')
             topic=os.getenv('ANNOTATION_TOPIC')
@@ -137,15 +139,33 @@ def publish_message(project_id, topic_name, message):
     future = publisher.publish(topic_name, b'hello from compare func')
     future.result()
 
+# define the function to compute Mean Squared Error between two images
+def meanSquaredError(img1, img2):
+   height, width = img1.shape
+   diff = cv2.subtract(img1, img2)
+   err = np.sum(diff**2)
+   mse = err/(float(height*width))
+   return mse, diff
 
-def compare(image_a, image_b):
-    """compare two images and return the percentage of difference"""
+def compare(image_a, image_b, imageMask):
+    "compare two images and return the percentage of difference"
 
-    image_a_data = cv2.imread(image_a, 0)
-    image_b_data = cv2.imread(image_b, 0)
+    #Read images
+    image_a_data = cv2.imread(image_a)
+    image_b_data = cv2.imread(image_b)
 
-    diff = cv2.absdiff(image_a_data, image_b_data)
-    diff_int = diff.astype(np.uint8)
-    percentage = (np.count_nonzero(diff_int) * 100) / diff_int.size
+    #Converting images to GrayScale
+    image_a_data = cv2.cvtColor(image_a_data, cv2.COLOR_BGR2GRAY)
+    image_b_data = cv2.cvtColor(image_b_data, cv2.COLOR_BGR2GRAY)
+
+    #Check if image Mask is not none and apply
+    if imageMask is not None:
+        mask = cv2.imread('mask.png',0)
+        image_a_data = cv2.bitwise_and(image_a_data,image_a_data,mask = mask)
+        image_b_data = cv2.bitwise_and(image_b_data,image_b_data,mask = mask)
+
+    #percentage is the difference between images, Diff is the image of the difference
+    percentage, diff = meanSquaredError(image_a_data, image_b_data)
+
     print("percentage difference: " + str(percentage))
     return percentage
