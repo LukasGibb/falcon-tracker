@@ -29,10 +29,13 @@ def handle(request):
     if bucket_name is None:
         return 'No bucket name set', 400
 
+
+    image_mask = os.environ.get('IMAGE_MASK',None)
+    if image_mask is None:
+        return 'No Mask image set', 400
+
     previous_frame_path = download_blob(bucket_name, 'previous_frame.jpg')
     if previous_frame_path is not None:
-
-        image_mask = os.environ.get('IMAGE_MASK',None)
 
         percentage = compare(latest_frame_path, previous_frame_path, image_mask)
         if percentage > float(os.environ.get('PERCENTAGE_DIFF', 10)):
@@ -140,15 +143,16 @@ def publish_message(project_id, topic_name, message):
     future.result()
 
 # define the function to compute Mean Squared Error between two images
-def meanSquaredError(img1, img2):
-   height, width = img1.shape
-   diff = cv2.subtract(img1, img2)
+def meanSquaredError(image_1, image_2):
+    """Mean Squared Error - The calculation of difference between images return the percentage of difference"""
+   height, width = image_1.shape
+   diff = cv2.subtract(image_1, image_2)
    err = np.sum(diff**2)
    mse = err/(float(height*width))
    return mse, diff
 
-def compare(image_a, image_b, imageMask):
-    "compare two images and return the percentage of difference"
+def compare(image_a, image_b, image_mask):
+    """compare two images and return the percentage of difference"""
 
     #Read images
     image_a_data = cv2.imread(image_a)
@@ -159,8 +163,8 @@ def compare(image_a, image_b, imageMask):
     image_b_data = cv2.cvtColor(image_b_data, cv2.COLOR_BGR2GRAY)
 
     #Check if image Mask is not none and apply
-    if imageMask is not None:
-        mask = cv2.imread('mask.png',0)
+    if image_mask is not None:
+        mask = cv2.imread(image_mask,0)
         image_a_data = cv2.bitwise_and(image_a_data,image_a_data,mask = mask)
         image_b_data = cv2.bitwise_and(image_b_data,image_b_data,mask = mask)
 
