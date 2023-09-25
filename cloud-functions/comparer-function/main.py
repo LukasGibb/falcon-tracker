@@ -165,8 +165,8 @@ def compare(image_a, image_b, image_mask):
     #Check if image Mask is not none and apply
     if image_mask is not None:
         mask = cv2.imread(image_mask,0)
-        image_a_data = cv2.bitwise_and(image_a_data,image_a_data,image_mask = mask)
-        image_b_data = cv2.bitwise_and(image_b_data,image_b_data,image_mask = mask)
+        image_a_data = cv2.bitwise_and(image_a_data,image_a_data,mask = mask)
+        image_b_data = cv2.bitwise_and(image_b_data,image_b_data,mask = mask)
 
     #percentage is the difference between images, Diff is the image of the difference
     percentage, diff = meanSquaredError(image_a_data, image_b_data)
