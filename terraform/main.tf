@@ -73,6 +73,7 @@ resource "google_cloudfunctions_function" "comparer_function" {
     BUCKET_NAME      = google_storage_bucket.comparer_bucket.name
     ANNOTATION_TOPIC = google_pubsub_topic.annotation_event_topic.name
     PERCENTAGE_DIFF  = "0.0"
+    IMAGE_MASK       = "mask.png"
   }
 
   depends_on = [module.project-services]
