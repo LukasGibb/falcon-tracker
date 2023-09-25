@@ -26,10 +26,15 @@ def handle(request):
     if bucket_name is None:
         return 'No bucket name set', 400
 
+
+    image_mask = os.environ.get('IMAGE_MASK',None)
+    if image_mask is None:
+        return 'No Mask image set', 400
+
     previous_frame_path = download_blob(bucket_name, 'previous_frame.jpg')
     if previous_frame_path is not None:
 
-        percentage = compare(latest_frame_path, previous_frame_path)
+        percentage = compare(latest_frame_path, previous_frame_path, image_mask)
         if percentage > float(os.environ.get('PERCENTAGE_DIFF', 10)):
             project_id=os.getenv('GCP_PROJECT')
             topic=os.getenv('ANNOTATION_TOPIC')
@@ -142,15 +147,34 @@ def publish_message(project_id, topic_name, message):
     future = publisher.publish(topic_name, message.encode("utf-8"))
     future.result()
 
+# define the function to compute Mean Squared Error between two images
+def meanSquaredError(image_1, image_2):
+    """Mean Squared Error - The calculation of difference between images return the percentage of difference"""
+    height, width = image_1.shape
+    diff = cv2.subtract(image_1, image_2)
+    err = np.sum(diff**2)
+    mse = err/(float(height*width))
+    return mse, diff
 
-def compare(image_a, image_b):
+def compare(image_a, image_b, image_mask):
     """compare two images and return the percentage of difference"""
 
-    image_a_data = cv2.imread(image_a, 0)
-    image_b_data = cv2.imread(image_b, 0)
+    #Read images
+    image_a_data = cv2.imread(image_a)
+    image_b_data = cv2.imread(image_b)
 
-    diff = cv2.absdiff(image_a_data, image_b_data)
-    diff_int = diff.astype(np.uint8)
-    percentage = (np.count_nonzero(diff_int) * 100) / diff_int.size
+    #Converting images to GrayScale
+    image_a_data = cv2.cvtColor(image_a_data, cv2.COLOR_BGR2GRAY)
+    image_b_data = cv2.cvtColor(image_b_data, cv2.COLOR_BGR2GRAY)
+
+    #Check if image Mask is not none and apply
+    if image_mask is not None:
+        mask = cv2.imread(image_mask,0)
+        image_a_data = cv2.bitwise_and(image_a_data,image_a_data,mask = mask)
+        image_b_data = cv2.bitwise_and(image_b_data,image_b_data,mask = mask)
+
+    #percentage is the difference between images, Diff is the image of the difference
+    percentage, diff = meanSquaredError(image_a_data, image_b_data)
+
     print("percentage difference: " + str(percentage))
     return percentage
