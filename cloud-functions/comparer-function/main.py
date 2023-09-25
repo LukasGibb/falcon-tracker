@@ -145,11 +145,11 @@ def publish_message(project_id, topic_name, message):
 # define the function to compute Mean Squared Error between two images
 def meanSquaredError(image_1, image_2):
     """Mean Squared Error - The calculation of difference between images return the percentage of difference"""
-   height, width = image_1.shape
-   diff = cv2.subtract(image_1, image_2)
-   err = np.sum(diff**2)
-   mse = err/(float(height*width))
-   return mse, diff
+    height, width = image_1.shape
+    diff = cv2.subtract(image_1, image_2)
+    err = np.sum(diff**2)
+    mse = err/(float(height*width))
+    return mse, diff
 
 def compare(image_a, image_b, image_mask):
     """compare two images and return the percentage of difference"""
